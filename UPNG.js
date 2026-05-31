@@ -1054,7 +1054,7 @@
         if (h * bpl > 500000 && (t == 2 || t == 3 || t == 4)) continue;
         for (var y = 0; y < h; y++)
           UPNG.encode._filterLine(data, img, y, bpl, bpp, t);
-        fls.push(fflate["deflateSync"](data));
+        fls.push(fflate["zlibSync"](data));
         if (bpp == 1) break;
       }
       var ti,
