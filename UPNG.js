@@ -702,7 +702,21 @@
     UPNG.encode = function (bufs, w, h, ps, dels, forbidPlte) {
       if (ps == null) ps = 0;
       if (forbidPlte == null) forbidPlte = false;
-      var data = new Uint8Array(bufs[0].byteLength * bufs.length + 100);
+      var nimg = UPNG.encode.compressPNG(bufs, w, h, ps, forbidPlte);
+      var anim = bufs.length > 1;
+
+      // Size the output exactly: chunk overhead is 12 bytes (length + type + crc)
+      var leng = 8 + (12 + 13) + (12 + 1) + (anim ? 12 + 8 : 0) + 12; // signature, IHDR, sRGB, acTL, IEND
+      if (nimg.ctype == 3) {
+        leng += 12 + nimg.plte.length * 3; // PLTE
+        if (nimg.gotAlpha) leng += 12 + nimg.plte.length; // tRNS
+      }
+      for (var j = 0; j < nimg.frames.length; j++) {
+        if (anim) leng += 12 + 26; // fcTL
+        leng += 12 + nimg.frames[j].cimg.length + (j == 0 ? 0 : 4); // IDAT / fdAT
+      }
+
+      var data = new Uint8Array(leng);
       var wr = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
       for (var i = 0; i < 8; i++) data[i] = wr[i];
       var offset = 8,
@@ -711,8 +725,6 @@
         wUi = bin.writeUint,
         wUs = bin.writeUshort,
         wAs = bin.writeASCII;
-
-      var nimg = UPNG.encode.compressPNG(bufs, w, h, ps, forbidPlte);
 
       wUi(data, offset, 13);
       offset += 4;
@@ -745,7 +757,6 @@
       wUi(data, offset, crc(data, offset - 5, 5));
       offset += 4; // crc
 
-      var anim = bufs.length > 1;
       if (anim) {
         wUi(data, offset, 8);
         offset += 4;
@@ -846,7 +857,7 @@
       wUi(data, offset, crc(data, offset - 4, 4));
       offset += 4; // crc
 
-      return data.buffer.slice(0, offset);
+      return data.buffer;
     };
 
     UPNG.encode.compressPNG = function (bufs, w, h, ps, forbidPlte) {
@@ -1054,7 +1065,7 @@
         if (h * bpl > 500000 && (t == 2 || t == 3 || t == 4)) continue;
         for (var y = 0; y < h; y++)
           UPNG.encode._filterLine(data, img, y, bpl, bpp, t);
-        fls.push(fflate["deflateSync"](data));
+        fls.push(fflate["zlibSync"](data)); // PNG requires a zlib stream, not raw deflate
         if (bpp == 1) break;
       }
       var ti,

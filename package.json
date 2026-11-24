@@ -1,7 +1,7 @@
 {
   "name": "@lvcabral/upng",
   "description": "Small, fast and advanced PNG / APNG encoder and decoder",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "homepage": "https://github.com/lvcabral/upng.js",
   "author": "photopea (https://github.com/photopea)",
   "contributors": [
@@ -16,8 +16,13 @@
   "bugs": {
     "url": "https://github.com/lvcabral/upng.js/issues"
   },
-  "main": "upng.js",
-  "types": "../../@types/upng-js/index.d.ts",
+  "main": "UPNG.js",
+  "types": "index.d.ts",
+  "files": [
+    "UPNG.js",
+    "index.d.ts",
+    "CHANGELOG.md"
+  ],
   "keywords": [
     "png",
     "apng",
